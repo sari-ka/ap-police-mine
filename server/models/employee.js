@@ -18,6 +18,7 @@ const EmployeeSchema = new Schema({
   Medical_History: [
   {
     Date: { type: Date, default: Date.now },
+    Disease: [{ type: Schema.Types.ObjectId, ref: "Disease" }],
     Diagnosis: String,
     Medicines: [
       {

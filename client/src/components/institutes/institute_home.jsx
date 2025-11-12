@@ -78,7 +78,16 @@ const Institute_home = () => {
             🧾 Inventory
           </li>
 
-          {/* NEW: Prescriptions Link */}
+          {/* Diseases Navigation */}
+          <li
+            className="mb-3 p-2 rounded hover-item"
+            style={{ fontSize: "1.05rem" }}
+            onClick={() => navigate("/institutions/diseases")}
+          >
+            🧬 Diseases
+          </li>
+
+          {/* Prescriptions Link */}
           <li
             className="mb-3 p-2 rounded hover-item"
             style={{ fontSize: "1.05rem" }}
@@ -86,6 +95,13 @@ const Institute_home = () => {
           >
             💊 Prescriptions
           </li>
+          <li
+  className="mb-3 p-2 rounded hover-item"
+  style={{ fontSize: "1.05rem" }}
+  onClick={() => navigate("/institutions/reports")}
+>
+  📋 View Employee Reports
+</li>
         </ul>
 
         <p
@@ -223,14 +239,14 @@ const Institute_home = () => {
             </button>
           </div>
 
-          {/* Nested Outlet */}
+          {/* Nested Routes (e.g., Diseases, Inventory) */}
           <div className="mt-5">
             <Outlet />
           </div>
         </div>
       </div>
 
-      {/* Hover effect for sidebar links */}
+      {/* Sidebar Hover Styles */}
       <style>
         {`
           .hover-item {

@@ -21,6 +21,8 @@ import EmployeeLogin from "./components/employee/EmployeeLogin";
 import EmployeeHome from "./components/employee/EmployeeHome";
 import InstituteInventory from "./components/institutes/institute_inventory";
 import PharmacyPrescriptionForm from "./components/institutes/PharmacyPrescriptionForm";
+import Diseases from "./components/institutes/Diseases";
+import InstituteReports from "./components/institutes/institutions_reports";
 function App() {
   const router = createBrowserRouter([
     {
@@ -103,6 +105,12 @@ function App() {
     },{
       path:"institutions/prescriptions",
       element:<PharmacyPrescriptionForm/>
+    },{
+      path:"institutions/diseases",
+      element:<Diseases/>
+    },{
+      path:"institutions/reports",
+      element:<InstituteReports/>
     }
   ]);
 

@@ -15,12 +15,14 @@ const medicineApp = require("./apis/medicines_api");
 const employeeApp=require('./apis/employee_api')
 const familyApp=require('./apis/family_member_api')
 const prescriptionApp = require("./apis/prescription_api");
+const diseaseApp=require("./apis/institute_enter_disease");
 app.use("/medicine-api", medicineApp);
 app.use("/institute-api", instituteApp);
 app.use("/manufacturer-api", manufacturerApp);
 app.use("/employee-api",employeeApp);
 app.use("/family-api",familyApp);
 app.use("/prescription-api", prescriptionApp);
+app.use("/disease-api",diseaseApp)
 // Base route
 app.get("/", (req, res) => res.send("Manufacturer Server Running!"));
 

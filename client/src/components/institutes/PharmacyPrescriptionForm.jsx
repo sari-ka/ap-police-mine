@@ -8,6 +8,8 @@ const PharmacyPrescriptionForm = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [instituteName, setInstituteName] = useState("");
+  const [employeeDiseases, setEmployeeDiseases] = useState([]);
+  const [familyDiseases, setFamilyDiseases] = useState([]);
 
   const [formData, setFormData] = useState({
     Institute_ID: "",
@@ -20,7 +22,7 @@ const PharmacyPrescriptionForm = () => {
 
   const BACKEND_PORT_NO = import.meta.env.VITE_BACKEND_PORT || "6100";
 
-  // Load institute info and employees on mount
+  // 🟢 Load institute info and employees on mount
   useEffect(() => {
     const localInstituteId = localStorage.getItem("instituteId");
     if (localInstituteId) {
@@ -34,7 +36,7 @@ const PharmacyPrescriptionForm = () => {
     fetchEmployees();
   }, []);
 
-  // Fetch institute name
+  // 🟢 Fetch institute name
   const fetchInstituteName = async (id) => {
     try {
       const res = await axios.get(
@@ -47,7 +49,7 @@ const PharmacyPrescriptionForm = () => {
     }
   };
 
-  // Fetch employees
+  // 🟢 Fetch employees
   const fetchEmployees = async () => {
     try {
       const res = await axios.get(
@@ -59,55 +61,79 @@ const PharmacyPrescriptionForm = () => {
     }
   };
 
-  // Fetch institute inventory
+  // 🟢 Fetch institute inventory
   const fetchInventory = async (id) => {
     try {
       const res = await axios.get(
         `http://localhost:${BACKEND_PORT_NO}/institute-api/inventory/${id}`
       );
       setInventory(res.data || []);
-      console.log("Fetched inventory:", res.data);
     } catch (err) {
       console.error("Error fetching inventory:", err);
     }
   };
 
-  // Filter employees based on ABS_NO
+  // 🟢 Filter employees based on ABS_NO input
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredEmployees([]);
     } else {
       const filtered = employees.filter((emp) =>
-        String(emp.ABS_NO || "").toLowerCase().startsWith(searchTerm.toLowerCase())
+        String(emp.ABS_NO || "")
+          .toLowerCase()
+          .startsWith(searchTerm.toLowerCase())
       );
       setFilteredEmployees(filtered);
     }
   }, [searchTerm, employees]);
 
-  // Fetch family members
-  useEffect(() => {
-    const fetchFamily = async () => {
-      if (!formData.Employee_ID) return setFamilyMembers([]);
-      try {
-        const res = await axios.get(
-          `http://localhost:${BACKEND_PORT_NO}/family-api/family/${formData.Employee_ID}`
-        );
-        setFamilyMembers(res.data || []);
-      } catch (err) {
-        console.error("Error fetching family members:", err);
-      }
-    };
-    fetchFamily();
-  }, [formData.Employee_ID]);
-
-  // Handle employee select
-  const handleEmployeeSelect = (emp) => {
+  // 🟢 Handle employee selection
+  const handleEmployeeSelect = async (emp) => {
     setFormData((prev) => ({ ...prev, Employee_ID: emp._id }));
     setSearchTerm(emp.ABS_NO || "");
     setFilteredEmployees([]);
+
+    // Fetch family members for this employee
+    try {
+      const famRes = await axios.get(
+        `http://localhost:${BACKEND_PORT_NO}/family-api/family/${emp._id}`
+      );
+      setFamilyMembers(famRes.data || []);
+    } catch (err) {
+      console.error("Error fetching family members:", err);
+    }
+
+    // Fetch diseases for this employee
+    try {
+      const res = await axios.get(
+        `http://localhost:${BACKEND_PORT_NO}/employee-api/by-abs/${emp.ABS_NO}`
+      );
+      const history = res.data?.Medical_History || [];
+      const diseases = history.flatMap((mh) => mh.Disease);
+      setEmployeeDiseases(diseases);
+    } catch (err) {
+      console.error("Error fetching employee diseases:", err);
+    }
   };
 
-  // Handle medicine select or quantity change
+  // 🟢 Handle family member selection
+  const handleFamilySelect = async (id) => {
+    setFormData((prev) => ({ ...prev, FamilyMember_ID: id }));
+
+    // Fetch disease report for that family member
+    try {
+      const res = await axios.get(
+        `http://localhost:${BACKEND_PORT_NO}/family-api/family-report/${id}`
+      );
+      const history = res.data?.Medical_History || [];
+      const diseases = history.flatMap((mh) => mh.Disease);
+      setFamilyDiseases(diseases);
+    } catch (err) {
+      console.error("Error fetching family diseases:", err);
+    }
+  };
+
+  // 🟢 Medicine field changes
   const handleMedicineChange = (index, field, value) => {
     setFormData((prev) => {
       const updated = [...prev.Medicines];
@@ -123,29 +149,19 @@ const PharmacyPrescriptionForm = () => {
         }
       } else if (field === "quantity") {
         updated[index].quantity = value;
-        const selected = inventory.find(
-          (m) => m.medicineId === updated[index].medicineId
-        );
-        if (selected) {
-          const newStock = selected.quantity - Number(value);
-          if (newStock < 0) {
-            alert(`❌ Not enough stock for ${selected.medicineName}. Available: ${selected.quantity}`);
-            updated[index].quantity = 0;
-          } else if (newStock <= selected.threshold) {
-            alert(`⚠️ Low stock warning: Only ${newStock} left for ${selected.medicineName}`);
-          }
-        }
       }
 
       return { ...prev, Medicines: updated };
     });
   };
 
-  // Add / Remove medicines
   const addMedicine = () =>
     setFormData((prev) => ({
       ...prev,
-      Medicines: [...prev.Medicines, { medicineId: "", medicineName: "", quantity: 0 }],
+      Medicines: [
+        ...prev.Medicines,
+        { medicineId: "", medicineName: "", quantity: 0 },
+      ],
     }));
 
   const removeMedicine = (index) =>
@@ -154,10 +170,9 @@ const PharmacyPrescriptionForm = () => {
       Medicines: prev.Medicines.filter((_, i) => i !== index),
     }));
 
-  // Submit handler
+  // 🟢 Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.Institute_ID || !formData.Employee_ID) {
       alert("Please fill all required fields.");
       return;
@@ -169,51 +184,55 @@ const PharmacyPrescriptionForm = () => {
       IsFamilyMember: formData.IsFamilyMember,
       FamilyMember_ID: formData.FamilyMember_ID || null,
       Medicines: formData.Medicines.map((m) => ({
-        Medicine_ID: m.medicineId, // ✅ correct ObjectId
+        Medicine_ID: m.medicineId,
         Medicine_Name: m.medicineName,
         Quantity: Number(m.quantity),
       })),
       Notes: formData.Notes,
     };
 
-    console.log("Submitting payload:", payload);
-
     try {
-      const res = await axios.post(
+      await axios.post(
         `http://localhost:${BACKEND_PORT_NO}/prescription-api/add`,
         payload
       );
       alert("✅ Prescription saved successfully!");
-
-      setFormData({
-        ...formData,
-        Employee_ID: "",
-        IsFamilyMember: false,
-        FamilyMember_ID: "",
-        Medicines: [{ medicineId: "", medicineName: "", quantity: 0 }],
-        Notes: "",
-      });
-      setSearchTerm("");
-      setFamilyMembers([]);
+      window.location.reload();
     } catch (err) {
-      console.error("Error saving prescription:", err?.response?.data || err);
-      alert("❌ Error saving prescription: " + (err?.response?.data?.message || err.message));
+      console.error("Error saving prescription:", err);
+      alert("❌ Error saving prescription");
     }
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "40px auto", padding: 24, background: "#fff", borderRadius: 8 }}>
+    <div
+      style={{
+        maxWidth: 650,
+        margin: "40px auto",
+        padding: 24,
+        background: "#fff",
+        borderRadius: 8,
+      }}
+    >
       <h2 style={{ textAlign: "center" }}>Pharmacy Prescription Entry</h2>
 
       <form onSubmit={handleSubmit} autoComplete="off">
+        {/* Institute Info */}
         <label>Institute</label>
         <input
           type="text"
           value={instituteName || "Loading..."}
           readOnly
-          style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc", marginBottom: 10 }}
+          style={{
+            width: "100%",
+            padding: 8,
+            borderRadius: 6,
+            border: "1px solid #ccc",
+            marginBottom: 10,
+          }}
         />
 
+        {/* Employee ABS_NO */}
         <label>Employee ABS_NO</label>
         <input
           type="text"
@@ -224,12 +243,23 @@ const PharmacyPrescriptionForm = () => {
         />
 
         {searchTerm && filteredEmployees.length > 0 && (
-          <div style={{ border: "1px solid #ccc", maxHeight: 150, overflowY: "auto", marginTop: 6 }}>
+          <div
+            style={{
+              border: "1px solid #ccc",
+              maxHeight: 150,
+              overflowY: "auto",
+              marginTop: 6,
+            }}
+          >
             {filteredEmployees.map((emp) => (
               <div
                 key={emp._id}
                 onClick={() => handleEmployeeSelect(emp)}
-                style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid #eee" }}
+                style={{
+                  padding: "8px 10px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #eee",
+                }}
               >
                 {emp.ABS_NO} — {emp.Name}
               </div>
@@ -237,13 +267,42 @@ const PharmacyPrescriptionForm = () => {
           </div>
         )}
 
+        {/* Employee Disease History */}
+        {employeeDiseases.length > 0 && !formData.IsFamilyMember && (
+          <div style={{ marginTop: 20 }}>
+            <h4>🧬 Employee Diseases</h4>
+            <table className="table table-bordered mt-2">
+              <thead className="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Severity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employeeDiseases.map((d, i) => (
+                  <tr key={i}>
+                    <td>{d.Disease_Name}</td>
+                    <td>{d.Category}</td>
+                    <td>{d.Severity_Level}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Family Member Option */}
         <label style={{ marginTop: 12 }}>
           <input
             type="checkbox"
-            name="IsFamilyMember"
             checked={formData.IsFamilyMember}
             onChange={(e) =>
-              setFormData((prev) => ({ ...prev, IsFamilyMember: e.target.checked }))
+              setFormData((prev) => ({
+                ...prev,
+                IsFamilyMember: e.target.checked,
+                FamilyMember_ID: "",
+              }))
             }
           />{" "}
           Prescription for Family Member?
@@ -253,11 +312,8 @@ const PharmacyPrescriptionForm = () => {
           <>
             <label style={{ marginTop: 10 }}>Select Family Member</label>
             <select
-              name="FamilyMember_ID"
               value={formData.FamilyMember_ID}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, FamilyMember_ID: e.target.value }))
-              }
+              onChange={(e) => handleFamilySelect(e.target.value)}
               style={{ width: "100%", padding: 8, borderRadius: 6 }}
             >
               <option value="">Select Family Member</option>
@@ -267,22 +323,56 @@ const PharmacyPrescriptionForm = () => {
                 </option>
               ))}
             </select>
+
+            {/* Family Member Diseases */}
+            {familyDiseases.length > 0 && (
+              <div style={{ marginTop: 20 }}>
+                <h4>👨‍👩‍👧 Family Member Diseases</h4>
+                <table className="table table-bordered mt-2">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Severity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {familyDiseases.map((d, i) => (
+                      <tr key={i}>
+                        <td>{d.Disease_Name}</td>
+                        <td>{d.Category}</td>
+                        <td>{d.Severity_Level}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </>
         )}
 
+        {/* Medicines Section */}
         <h4 style={{ marginTop: 20 }}>Medicines</h4>
         {formData.Medicines.map((med, i) => (
           <div key={i} style={{ marginBottom: 12 }}>
             <select
               value={med.medicineId}
-              onChange={(e) => handleMedicineChange(i, "medicineId", e.target.value)}
+              onChange={(e) =>
+                handleMedicineChange(i, "medicineId", e.target.value)
+              }
               required
-              style={{ width: "70%", padding: 8, borderRadius: 6, marginRight: 8 }}
+              style={{
+                width: "70%",
+                padding: 8,
+                borderRadius: 6,
+                marginRight: 8,
+              }}
             >
               <option value="">Select Medicine</option>
               {inventory.map((m) => (
                 <option key={m.medicineId} value={m.medicineId}>
-                  {m.medicineName} ({m.manufacturerName}) — Available: {m.quantity}
+                  {m.medicineName} ({m.manufacturerName}) — Available:{" "}
+                  {m.quantity}
                 </option>
               ))}
             </select>
@@ -291,33 +381,66 @@ const PharmacyPrescriptionForm = () => {
               type="number"
               value={med.quantity}
               placeholder="Qty"
-              onChange={(e) => handleMedicineChange(i, "quantity", e.target.value)}
+              onChange={(e) =>
+                handleMedicineChange(i, "quantity", e.target.value)
+              }
               required
               style={{ width: "20%", padding: 8, borderRadius: 6 }}
             />
             <button
               type="button"
               onClick={() => removeMedicine(i)}
-              style={{ marginLeft: 5, background: "red", color: "#fff", border: "none", borderRadius: 6, padding: "6px 10px" }}
+              style={{
+                marginLeft: 5,
+                background: "red",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                padding: "6px 10px",
+              }}
             >
               X
             </button>
           </div>
         ))}
-        <button type="button" onClick={addMedicine} style={{ background: "#007bff", color: "#fff", border: "none", padding: 8, borderRadius: 6 }}>
+        <button
+          type="button"
+          onClick={addMedicine}
+          style={{
+            background: "#007bff",
+            color: "#fff",
+            border: "none",
+            padding: 8,
+            borderRadius: 6,
+          }}
+        >
           + Add Medicine
         </button>
 
+        {/* Notes */}
         <label style={{ display: "block", marginTop: 16 }}>Notes</label>
         <textarea
           name="Notes"
           value={formData.Notes}
-          onChange={(e) => setFormData({ ...formData, Notes: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, Notes: e.target.value })
+          }
           rows={3}
           style={{ width: "100%", padding: 8, borderRadius: 6 }}
         />
 
-        <button type="submit" style={{ marginTop: 20, width: "100%", padding: 10, background: "black", color: "white", border: "none", borderRadius: 8 }}>
+        <button
+          type="submit"
+          style={{
+            marginTop: 20,
+            width: "100%",
+            padding: 10,
+            background: "black",
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+          }}
+        >
           Submit Prescription
         </button>
       </form>
