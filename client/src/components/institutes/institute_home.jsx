@@ -61,19 +61,30 @@ const Institute_home = () => {
           >
             📦 Orders Medicines
           </li>
+
           <li
             className="mb-3 p-2 rounded hover-item"
             style={{ fontSize: "1.05rem" }}
             onClick={() => alert("Show employee orders")}
           >
-            👩‍⚕️ Orders from Employees
+            👩‍⚕ Orders from Employees
           </li>
+
           <li
             className="mb-3 p-2 rounded hover-item"
             style={{ fontSize: "1.05rem" }}
             onClick={() => navigate("/institutes/inventory")}
           >
             🧾 Inventory
+          </li>
+
+          {/* NEW: Prescriptions Link */}
+          <li
+            className="mb-3 p-2 rounded hover-item"
+            style={{ fontSize: "1.05rem" }}
+            onClick={() => navigate("/institutions/prescriptions")}
+          >
+            💊 Prescriptions
           </li>
         </ul>
 

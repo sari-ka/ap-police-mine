@@ -7,7 +7,21 @@ const FamilyMemberSchema = new Schema({
   Name: { type: String, required: true },
   Relationship: { type: String, required: true },
   DOB: { type: Date },
-  Medical_History: { type: String }
+  Gender: { type: String, required: true, enum: ["Male", "Female"] },
+  Medical_History: [
+  {
+    Date: { type: Date, default: Date.now },
+    Diagnosis: String,
+    Medicines: [
+      {
+        Medicine_Name: String,
+        Quantity: Number
+      }
+    ],
+    Notes: String
+  }
+]
+
 });
 
 module.exports = mongoose.model("FamilyMember", FamilyMemberSchema);

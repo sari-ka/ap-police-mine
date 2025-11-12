@@ -49,5 +49,16 @@ familyApp.post(
     });
   })
 );
+familyApp.get("/family/:employeeId", async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.employeeId).populate("FamilyMembers");
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    res.json(employee.FamilyMembers || []);
+  } catch (err) {
+    console.error("Error fetching family members:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 
 module.exports = familyApp;

@@ -15,7 +15,19 @@ const EmployeeSchema = new Schema({
     Pincode: String
   },
   Blood_Group: String,
-  Medical_History: Object,
+  Medical_History: [
+  {
+    Date: { type: Date, default: Date.now },
+    Diagnosis: String,
+    Medicines: [
+      {
+        Medicine_Name: String,
+        Quantity: Number
+      }
+    ],
+    Notes: String
+  }
+],
   FamilyMembers: [{ type: Schema.Types.ObjectId, ref: "FamilyMember" }]
 });
 

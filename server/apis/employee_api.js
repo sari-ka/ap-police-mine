@@ -10,13 +10,12 @@ const Employee = require("../models/employee"); // adjust path if needed
 // ==========================================
 //  GET all employees
 // ==========================================
-employeeApp.get(
-  "/employees",
-  expressAsyncHandler(async (req, res) => {
-    const employees = await Employee.find();
-    res.status(200).json(employees);
-  })
-);
+// employeeApp (routes)
+employeeApp.get("/employees", expressAsyncHandler(async (req, res) => {
+  // return only necessary fields
+  const employees = await Employee.find({}, "_id ABS_NO Name");
+  res.status(200).json(employees);
+}));
 
 // ==========================================
 //  POST - Register New Employee
@@ -148,5 +147,7 @@ employeeApp.delete(
     res.status(200).json({ message: "Employee deleted successfully" });
   })
 );
+
+
 
 module.exports = employeeApp;

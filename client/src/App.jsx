@@ -20,6 +20,7 @@ import ManufacturerLayout from "./components/manufacturer/ManufacturerLayout";
 import EmployeeLogin from "./components/employee/EmployeeLogin";
 import EmployeeHome from "./components/employee/EmployeeHome";
 import InstituteInventory from "./components/institutes/institute_inventory";
+import PharmacyPrescriptionForm from "./components/institutes/PharmacyPrescriptionForm";
 function App() {
   const router = createBrowserRouter([
     {
@@ -99,6 +100,9 @@ function App() {
     {
       path:"employee/home",
       element:<EmployeeHome/>
+    },{
+      path:"institutions/prescriptions",
+      element:<PharmacyPrescriptionForm/>
     }
   ]);
 
