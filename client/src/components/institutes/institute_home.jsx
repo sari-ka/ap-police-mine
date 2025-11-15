@@ -14,6 +14,7 @@ const Institute_home = () => {
     navigate("/");
   };
   const handleOrderClick = () => navigate("/institutes/placeorder");
+  const handleAnalyticsClick = () => navigate("/institutions/analytics"); // ✅ New
 
   return (
     <div
@@ -38,17 +39,11 @@ const Institute_home = () => {
       >
         {/* Close Button */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h5
-            className="fw-bold mb-0"
-            style={{ fontSize: "1.25rem", letterSpacing: "0.3px" }}
-          >
-            Institute Panel
-          </h5>
+          <h5 className="fw-bold mb-0">Institute Panel</h5>
           <IoClose
             size={28}
             className="text-dark cursor-pointer"
             onClick={() => setSidebarOpen(false)}
-            style={{ cursor: "pointer" }}
           />
         </div>
 
@@ -56,52 +51,34 @@ const Institute_home = () => {
         <ul className="list-unstyled mt-4">
           <li
             className="mb-3 p-2 rounded hover-item"
-            style={{ fontSize: "1.05rem" }}
             onClick={() => navigate("/institutes/manufacturer-orders")}
           >
             📦 Orders Medicines
           </li>
-
           <li
             className="mb-3 p-2 rounded hover-item"
-            style={{ fontSize: "1.05rem" }}
-            onClick={() => alert("Show employee orders")}
-          >
-            👩‍⚕ Orders from Employees
-          </li>
-
-          <li
-            className="mb-3 p-2 rounded hover-item"
-            style={{ fontSize: "1.05rem" }}
             onClick={() => navigate("/institutes/inventory")}
           >
             🧾 Inventory
           </li>
-
-          {/* Diseases Navigation */}
           <li
             className="mb-3 p-2 rounded hover-item"
-            style={{ fontSize: "1.05rem" }}
             onClick={() => navigate("/institutions/diseases")}
           >
             🧬 Diseases
           </li>
-
-          {/* Prescriptions Link */}
           <li
             className="mb-3 p-2 rounded hover-item"
-            style={{ fontSize: "1.05rem" }}
             onClick={() => navigate("/institutions/prescriptions")}
           >
             💊 Prescriptions
           </li>
           <li
-  className="mb-3 p-2 rounded hover-item"
-  style={{ fontSize: "1.05rem" }}
-  onClick={() => navigate("/institutions/reports")}
->
-  📋 View Employee Reports
-</li>
+            className="mb-3 p-2 rounded hover-item"
+            onClick={() => navigate("/institutions/reports")}
+          >
+            📋 View Employee Reports
+          </li>
         </ul>
 
         <p
@@ -110,7 +87,6 @@ const Institute_home = () => {
             color: "#777",
             marginTop: "100px",
             fontSize: "0.85rem",
-            letterSpacing: "0.3px",
           }}
         >
           © 2025 AP Police Health
@@ -129,11 +105,7 @@ const Institute_home = () => {
         {/* Header */}
         <div
           className="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm"
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
-          }}
+          style={{ position: "sticky", top: 0, zIndex: 10 }}
         >
           <div className="d-flex align-items-center gap-3">
             {!sidebarOpen && (
@@ -141,24 +113,19 @@ const Institute_home = () => {
                 size={30}
                 className="text-dark cursor-pointer"
                 onClick={() => setSidebarOpen(true)}
-                style={{ cursor: "pointer" }}
               />
             )}
-            <h3
-              className="fw-bold mb-0"
-              style={{ color: "#111", fontSize: "1.7rem" }}
-            >
+            <h3 className="fw-bold mb-0" style={{ color: "#111" }}>
               Institute Dashboard
             </h3>
           </div>
 
-          {/* Profile Icon */}
+          {/* Profile */}
           <div className="position-relative">
             <FaUserCircle
               size={38}
               className="text-dark cursor-pointer"
               onClick={() => setShowDropdown(!showDropdown)}
-              style={{ cursor: "pointer" }}
             />
             {showDropdown && (
               <div
@@ -172,7 +139,6 @@ const Institute_home = () => {
               >
                 <p
                   className="mb-2 fw-semibold text-black small"
-                  style={{ cursor: "pointer" }}
                   onClick={handleProfileClick}
                 >
                   Profile
@@ -180,7 +146,6 @@ const Institute_home = () => {
                 <hr className="my-1" />
                 <p
                   className="mb-0 fw-semibold text-black small"
-                  style={{ cursor: "pointer" }}
                   onClick={handleSignout}
                 >
                   Sign Out
@@ -190,7 +155,7 @@ const Institute_home = () => {
           </div>
         </div>
 
-        {/* Dashboard Stats */}
+        {/* Dashboard Content */}
         <div className="container py-4">
           <div className="row g-4">
             <div className="col-md-4">
@@ -207,14 +172,14 @@ const Institute_home = () => {
             </div>
             <div className="col-md-4">
               <div className="card text-center p-3 border-0 shadow-sm rounded-4">
-                <h6 className="text-muted mb-1">Registered Employees</h6>
+                <h6 className="text-muted mb-1">Medicines in Stock</h6>
                 <h3 className="fw-bold text-dark">18</h3>
               </div>
             </div>
           </div>
 
-          {/* Place Order Button */}
-          <div className="text-center mt-5">
+          {/* Buttons */}
+          <div className="text-center mt-5 d-flex flex-column align-items-center gap-3">
             <button
               className="btn px-5 py-2 fw-semibold"
               onClick={handleOrderClick}
@@ -223,54 +188,29 @@ const Institute_home = () => {
                 color: "#fff",
                 borderRadius: "10px",
                 letterSpacing: "0.3px",
-                transition: "0.3s ease",
-                fontSize: "1rem",
               }}
-              onMouseOver={(e) =>
-                (e.target.style.background =
-                  "linear-gradient(180deg, #000, #1c1c1c)")
-              }
-              onMouseOut={(e) =>
-                (e.target.style.background =
-                  "linear-gradient(180deg, #1c1c1c, #000)")
-              }
             >
               ➕ Place New Order
             </button>
+
+            {/* ✅ New Analytics Button */}
+            <button
+              className="btn btn-outline-dark px-5 py-2 fw-semibold"
+              onClick={handleAnalyticsClick}
+              style={{
+                borderRadius: "10px",
+                letterSpacing: "0.3px",
+              }}
+            >
+              📊 View Analytics
+            </button>
           </div>
 
-          {/* Nested Routes (e.g., Diseases, Inventory) */}
           <div className="mt-5">
             <Outlet />
           </div>
         </div>
       </div>
-
-      {/* Sidebar Hover Styles */}
-      <style>
-        {`
-          .hover-item {
-            color: #333;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.25s ease;
-          }
-
-          .hover-item:hover {
-            background-color: #f0f0f0;
-            color: #000;
-            transform: translateX(2px);
-          }
-
-          .translate-x-0 {
-            transform: translateX(0);
-          }
-
-          .-translate-x-100 {
-            transform: translateX(-100%);
-          }
-        `}
-      </style>
     </div>
   );
 };

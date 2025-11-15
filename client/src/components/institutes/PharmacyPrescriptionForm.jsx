@@ -8,8 +8,8 @@ const PharmacyPrescriptionForm = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [instituteName, setInstituteName] = useState("");
-  const [employeeDiseases, setEmployeeDiseases] = useState([]);
-  const [familyDiseases, setFamilyDiseases] = useState([]);
+  const [employeeDiseases, setEmployeeDiseases] = useState({ communicable: [], nonCommunicable: [] });
+  const [familyDiseases, setFamilyDiseases] = useState({ communicable: [], nonCommunicable: [] });
 
   const [formData, setFormData] = useState({
     Institute_ID: "",
@@ -29,14 +29,10 @@ const PharmacyPrescriptionForm = () => {
       setFormData((s) => ({ ...s, Institute_ID: localInstituteId }));
       fetchInstituteName(localInstituteId);
       fetchInventory(localInstituteId);
-    } else {
-      console.warn("No instituteId found in localStorage");
     }
-
     fetchEmployees();
   }, []);
 
-  // 🟢 Fetch institute name
   const fetchInstituteName = async (id) => {
     try {
       const res = await axios.get(
@@ -45,11 +41,9 @@ const PharmacyPrescriptionForm = () => {
       setInstituteName(res.data?.Institute_Name || "Unknown Institute");
     } catch (err) {
       console.error("Error fetching institute name:", err);
-      setInstituteName("Unknown Institute");
     }
   };
 
-  // 🟢 Fetch employees
   const fetchEmployees = async () => {
     try {
       const res = await axios.get(
@@ -61,7 +55,6 @@ const PharmacyPrescriptionForm = () => {
     }
   };
 
-  // 🟢 Fetch institute inventory
   const fetchInventory = async (id) => {
     try {
       const res = await axios.get(
@@ -73,7 +66,7 @@ const PharmacyPrescriptionForm = () => {
     }
   };
 
-  // 🟢 Filter employees based on ABS_NO input
+  // 🟢 Filter employees based on ABS_NO
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredEmployees([]);
@@ -87,13 +80,32 @@ const PharmacyPrescriptionForm = () => {
     }
   }, [searchTerm, employees]);
 
-  // 🟢 Handle employee selection
+  // 🟢 Disease categorization (Communicable recent < 14 days)
+  const categorizeDiseases = (diseaseList) => {
+    if (!diseaseList.length) return { communicable: [], nonCommunicable: [] };
+
+    const now = new Date();
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // last 14 days
+
+    const communicable = diseaseList.filter(
+      (d) =>
+        d.Category === "Communicable" &&
+        new Date(d.createdAt || d.updatedAt || now) >= twoWeeksAgo
+    );
+
+    const nonCommunicable = diseaseList.filter(
+      (d) => d.Category === "Non-Communicable"
+    );
+
+    return { communicable, nonCommunicable };
+  };
+
+  // 🟢 Handle employee select
   const handleEmployeeSelect = async (emp) => {
     setFormData((prev) => ({ ...prev, Employee_ID: emp._id }));
     setSearchTerm(emp.ABS_NO || "");
     setFilteredEmployees([]);
 
-    // Fetch family members for this employee
     try {
       const famRes = await axios.get(
         `http://localhost:${BACKEND_PORT_NO}/family-api/family/${emp._id}`
@@ -103,41 +115,38 @@ const PharmacyPrescriptionForm = () => {
       console.error("Error fetching family members:", err);
     }
 
-    // Fetch diseases for this employee
     try {
       const res = await axios.get(
         `http://localhost:${BACKEND_PORT_NO}/employee-api/by-abs/${emp.ABS_NO}`
       );
       const history = res.data?.Medical_History || [];
-      const diseases = history.flatMap((mh) => mh.Disease);
-      setEmployeeDiseases(diseases);
+      const allDiseases = history.flatMap((mh) => mh.Disease);
+      setEmployeeDiseases(categorizeDiseases(allDiseases));
     } catch (err) {
       console.error("Error fetching employee diseases:", err);
     }
   };
 
-  // 🟢 Handle family member selection
+  // 🟢 Handle family select
   const handleFamilySelect = async (id) => {
     setFormData((prev) => ({ ...prev, FamilyMember_ID: id }));
 
-    // Fetch disease report for that family member
     try {
       const res = await axios.get(
         `http://localhost:${BACKEND_PORT_NO}/family-api/family-report/${id}`
       );
       const history = res.data?.Medical_History || [];
-      const diseases = history.flatMap((mh) => mh.Disease);
-      setFamilyDiseases(diseases);
+      const allDiseases = history.flatMap((mh) => mh.Disease);
+      setFamilyDiseases(categorizeDiseases(allDiseases));
     } catch (err) {
       console.error("Error fetching family diseases:", err);
     }
   };
 
-  // 🟢 Medicine field changes
+  // 🟢 Medicine Handlers
   const handleMedicineChange = (index, field, value) => {
     setFormData((prev) => {
       const updated = [...prev.Medicines];
-
       if (field === "medicineId") {
         const selected = inventory.find((m) => m.medicineId === value);
         if (selected) {
@@ -150,7 +159,6 @@ const PharmacyPrescriptionForm = () => {
       } else if (field === "quantity") {
         updated[index].quantity = value;
       }
-
       return { ...prev, Medicines: updated };
     });
   };
@@ -203,6 +211,45 @@ const PharmacyPrescriptionForm = () => {
       alert("❌ Error saving prescription");
     }
   };
+
+  // ✅ Disease Table Component
+  const DiseaseTable = ({ title, diseases }) => (
+    <>
+      {diseases.length > 0 && (
+        <div style={{ marginTop: 15 }}>
+          <h5>{title}</h5>
+          <table className="table table-bordered mt-2">
+            <thead className="table-light">
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Severity</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {diseases.map((d, i) => (
+                <tr
+                  key={i}
+                  style={{
+                    backgroundColor:
+                      d.Category === "Communicable" ? "#ffecec" : "inherit",
+                  }}
+                >
+                  <td>{d.Disease_Name}</td>
+                  <td>{d.Category}</td>
+                  <td>{d.Severity_Level}</td>
+                  <td>
+                    {new Date(d.createdAt || d.updatedAt || Date.now()).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div
@@ -267,30 +314,21 @@ const PharmacyPrescriptionForm = () => {
           </div>
         )}
 
-        {/* Employee Disease History */}
-        {employeeDiseases.length > 0 && !formData.IsFamilyMember && (
+        {/* Employee Diseases */}
+        {employeeDiseases.communicable.length > 0 ||
+        employeeDiseases.nonCommunicable.length > 0 ? (
           <div style={{ marginTop: 20 }}>
             <h4>🧬 Employee Diseases</h4>
-            <table className="table table-bordered mt-2">
-              <thead className="table-light">
-                <tr>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Severity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employeeDiseases.map((d, i) => (
-                  <tr key={i}>
-                    <td>{d.Disease_Name}</td>
-                    <td>{d.Category}</td>
-                    <td>{d.Severity_Level}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DiseaseTable
+              title="Communicable (Recent — Last 2 Weeks)"
+              diseases={employeeDiseases.communicable}
+            />
+            <DiseaseTable
+              title="Non-Communicable (All)"
+              diseases={employeeDiseases.nonCommunicable}
+            />
           </div>
-        )}
+        ) : null}
 
         {/* Family Member Option */}
         <label style={{ marginTop: 12 }}>
@@ -325,29 +363,20 @@ const PharmacyPrescriptionForm = () => {
             </select>
 
             {/* Family Member Diseases */}
-            {familyDiseases.length > 0 && (
+            {familyDiseases.communicable.length > 0 ||
+            familyDiseases.nonCommunicable.length > 0 ? (
               <div style={{ marginTop: 20 }}>
                 <h4>👨‍👩‍👧 Family Member Diseases</h4>
-                <table className="table table-bordered mt-2">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Name</th>
-                      <th>Category</th>
-                      <th>Severity</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {familyDiseases.map((d, i) => (
-                      <tr key={i}>
-                        <td>{d.Disease_Name}</td>
-                        <td>{d.Category}</td>
-                        <td>{d.Severity_Level}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <DiseaseTable
+                  title="Communicable (Recent — Last 2 Weeks)"
+                  diseases={familyDiseases.communicable}
+                />
+                <DiseaseTable
+                  title="Non-Communicable (All)"
+                  diseases={familyDiseases.nonCommunicable}
+                />
               </div>
-            )}
+            ) : null}
           </>
         )}
 

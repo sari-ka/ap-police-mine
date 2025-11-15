@@ -23,6 +23,7 @@ import InstituteInventory from "./components/institutes/institute_inventory";
 import PharmacyPrescriptionForm from "./components/institutes/PharmacyPrescriptionForm";
 import Diseases from "./components/institutes/Diseases";
 import InstituteReports from "./components/institutes/institutions_reports";
+import InstituteAnalytics from "./components/institutes/institute_analytics";
 function App() {
   const router = createBrowserRouter([
     {
@@ -111,6 +112,9 @@ function App() {
     },{
       path:"institutions/reports",
       element:<InstituteReports/>
+    },{
+      path:"institutions/analytics",
+      element:<InstituteAnalytics/>
     }
   ]);
 
