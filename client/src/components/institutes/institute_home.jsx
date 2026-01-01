@@ -88,6 +88,7 @@ const Institute_home = () => {
     { icon: <FaFileMedical />, label: "View Employee Reports", path: "/institutions/analytics" },
     { icon: <FaClipboardList />, label: "Diagnosis", path: "/institutions/diagnosis-entry" },
     { icon: <FaClipboardList />, label: "Ledger", path: "/institutes/ledger" },
+    { icon: <FaClipboardList />, label: "Indent", path: "/institutes/indent" },
   ];
 
   return (
