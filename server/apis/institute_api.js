@@ -420,6 +420,7 @@ instituteApp.get("/inventory/:instituteId", async (req, res) => {
 
     const inventory = institute.Medicine_Inventory.map((item) => ({
       medicineId: item.Medicine_ID?._id,
+      medicineCode: item?.Medicine_ID?.Medicine_Code, 
       medicineName: item.Medicine_ID?.Medicine_Name,
       manufacturerName: item.Medicine_ID?.Manufacturer_ID?.Manufacturer_Name,
       quantity: item.Quantity,
